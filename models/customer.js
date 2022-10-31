@@ -29,6 +29,37 @@ class Customer {
     return results.rows.map((c) => new Customer(c));
   }
 
+  /** find customers by search term. */
+
+  static async search(term) {
+    const results = await db.query(
+      `SELECT id, 
+         first_name AS "firstName",  
+         last_name AS "lastName", 
+         phone, 
+         notes
+       FROM customers WHERE first_name ILIKE '%${term}%' OR last_name ILIKE '%${term}%'
+       ORDER BY last_name, first_name`
+    );
+    return results.rows.map((c) => new Customer(c));
+  }
+
+  static async topTen() {
+    const results = await db.query(
+      `SELECT customers.id,
+         first_name AS "firstName",
+         last_name AS "lastName",
+         phone, customers.notes,
+         COUNT(reservations)
+       FROM customers
+       JOIN reservations ON customers.id = reservations.customer_id
+       GROUP BY customers.id
+       ORDER BY COUNT(reservations) DESC
+       LIMIT 10;`
+    );
+    return results.rows.map((c) => new Customer(c));
+  }
+
   /** get a customer by ID. */
 
   static async get(id) {
